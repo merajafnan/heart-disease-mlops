@@ -1,0 +1,9 @@
+{
+  "raw_rows": 303,
+  "clean_rows": 297,
+  "removed_missing_or_duplicate_rows": 6,
+  "negative_count": 160,
+  "positive_count": 137,
+  "raw_sha256": "a74b7efa387bc9d108d7d0115d831fe9b414b29ae7124f331b622b4efa0427c8",
+  "source": "https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data"
+}

@@ -1,0 +1,40 @@
+name: Heart disease ML CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-train-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Lint
+        run: ruff check .
+      - name: Unit tests
+        run: python -m pytest -q
+      - name: Prepare data
+        run: python -m heart_mlops.data
+      - name: Generate EDA
+        run: python -m heart_mlops.eda
+      - name: Train and track models
+        run: python -m heart_mlops.train
+      - name: Build serving image
+        run: docker build -t heart-disease-api:ci .
+      - name: Upload evidence and model
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlops-run-${{ github.run_number }}
+          path: |
+            artifacts/
+            reports/figures/
+            data/processed/
+            mlruns/
+          if-no-files-found: warn
+
