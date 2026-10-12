@@ -89,23 +89,19 @@ The Service is type `LoadBalancer`. Docker Desktop normally makes the service av
 
 The selected model in `artifacts/` is included in the repository after training. `mlruns/` is excluded from Git because CI uploads the experiment store as a workflow artifact. The cleaned dataset, EDA figures, and report also live in the repository. CI builds its Docker image from a freshly trained model.
 
-## Submission evidence
+## Deliverables and file locations
 
-The repository contains the source and cleaned data, EDA/training/inference scripts, the fitted model and metadata, tests, workflow YAML, Dockerfile, Kubernetes manifests, all ten named Windows evidence screenshots, and the final report. See [screenshots/README.md](screenshots/README.md) for the evidence list. The only separate submission item is the short pipeline video; [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md) lists what to demonstrate.
+1. **Code, Dockerfile, dependencies:** [`heart_mlops/`](heart_mlops/) contains the application code; [`Dockerfile`](Dockerfile) builds the API image; [`requirements.txt`](requirements.txt) and [`requirements-api.txt`](requirements-api.txt) list the development and serving dependencies.
+2. **Cleaned data and download instructions:** [`data/processed/heart_disease_clean.csv`](data/processed/heart_disease_clean.csv) and [`data/processed/data_summary.json`](data/processed/data_summary.json) contain the prepared data and counts. [`heart_mlops/data.py`](heart_mlops/data.py) downloads and cleans the UCI source; [`WSL_RUNBOOK.md`](WSL_RUNBOOK.md) gives the command.
+3. **EDA, training, inference:** The requested scripts are [`heart_mlops/eda.py`](heart_mlops/eda.py), [`heart_mlops/train.py`](heart_mlops/train.py), [`heart_mlops/predict.py`](heart_mlops/predict.py), and [`heart_mlops/api.py`](heart_mlops/api.py). Plots are in [`reports/figures/`](reports/figures/), and the selected fitted pipeline is [`artifacts/model.joblib`](artifacts/model.joblib).
+4. **Unit tests:** [`tests/`](tests/) contains `test_data.py`, `test_model.py`, and `test_api.py`. The conventional plural folder name fulfills the assignment's `test/` requirement.
+5. **GitHub Actions workflow:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs linting, tests, data preparation, EDA, training, Docker build, and artifact upload on pushes and pull requests.
+6. **Deployment manifests:** [`k8s/deployment.yaml`](k8s/deployment.yaml) and [`k8s/service.yaml`](k8s/service.yaml) deploy the API and local LoadBalancer Service to Docker Desktop Kubernetes.
+7. **Screenshot folder:** [`screenshots/`](screenshots/) contains the ten named Windows evidence images and extra MLflow captures. [`screenshots/README.md`](screenshots/README.md) identifies the main images.
+8. **Final written report:** [`reports/Final_Report.docx`](reports/Final_Report.docx) is the ten-page report covering EDA, evaluation, MLflow, architecture, CI, Docker, Kubernetes, and monitoring evidence.
+9. **Local API access instructions:** This README and [`WINDOWS_RUNBOOK.md`](WINDOWS_RUNBOOK.md) explain `http://localhost:8000/health`, `POST http://localhost:8000/predict` with [`sample_request.json`](sample_request.json), `http://localhost:8000/monitor`, and `/metrics`. The service runs on the Windows laptop's local Docker Desktop cluster; there is no public URL.
 
-## Repository contents
-
-| Path | Contents |
-|---|---|
-| `heart_mlops/data.py` | UCI acquisition, parsing, cleaning, target mapping |
-| `heart_mlops/eda.py` | Four EDA plots |
-| `heart_mlops/train.py` | Pipelines, cross validation, MLflow, evaluation |
-| `heart_mlops/predict.py` | Reusable model inference |
-| `heart_mlops/api.py` | FastAPI and monitoring |
-| `tests/` | Data, model, and API tests |
-| `k8s/` | Deployment and LoadBalancer Service |
-| `reports/` | EDA/evaluation figures and report |
-| `screenshots/` | Evidence captured on the Windows laptop |
+The short pipeline video is a separate submission item. [`VIDEO_SCRIPT.md`](VIDEO_SCRIPT.md) lists the scenes and evidence to show.
 
 ## Source and limitations
 

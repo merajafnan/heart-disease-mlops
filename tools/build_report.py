@@ -91,6 +91,15 @@ def para(doc, text, style=None):
     return doc.add_paragraph(text, style=style)
 
 
+def deliverable(doc, number, title, details):
+    item = doc.add_paragraph()
+    item.paragraph_format.left_indent = Inches(0.22)
+    item.paragraph_format.first_line_indent = Inches(-0.22)
+    item.paragraph_format.space_after = Pt(1)
+    item.add_run(f"{number}. {title} — ").bold = True
+    item.add_run(details)
+
+
 def heading(doc, title):
     doc.add_heading(title, level=1)
 
@@ -170,14 +179,17 @@ def build(final=False, repo_url=""):
         ("Held out test ROC-AUC", f"{meta['test_metrics']['roc_auc']:.3f}"),
     ])
     para(doc, ("The figures and metrics come from the Windows run using Python " if final else "The figures in this draft come from an actual local development run using Python ") + meta["python_version"] + ("." if final else ". The Windows run should be used to confirm the final submission values."))
-    doc.add_heading("Submission contents", level=1)
-    add_table(doc, ["Deliverable", "Repository location"], [
-        ("Source and install files", "heart_mlops/; requirements.txt; requirements-api.txt; Dockerfile"),
-        ("Data and saved model", "data/raw/; data/processed/; artifacts/model.joblib; artifacts/model_metadata.json"),
-        ("Tests, CI, and deployment", "tests/; .github/workflows/ci.yml; k8s/deployment.yaml; k8s/service.yaml"),
-        ("Evidence and documentation", "screenshots/; reports/Final_Report.docx; README.md; WINDOWS_RUNBOOK.md; WSL_RUNBOOK.md"),
-    ])
-    para(doc, "The short pipeline demonstration is a separate submission item; VIDEO_SCRIPT.md lists the scenes and evidence to show.")
+    doc.add_heading("Deliverables and file locations", level=1)
+    deliverable(doc, 1, "Code, Dockerfile, dependencies", "heart_mlops/ contains the application code; Dockerfile builds the serving image; requirements.txt and requirements-api.txt list dependencies.")
+    deliverable(doc, 2, "Cleaned data and download instructions", "data/processed/heart_disease_clean.csv and data_summary.json contain prepared data; heart_mlops/data.py downloads and cleans the UCI source. WSL_RUNBOOK.md gives the command.")
+    deliverable(doc, 3, "EDA, training, inference", "heart_mlops/eda.py, train.py, predict.py, and api.py are the requested scripts; reports/figures/ contains plots, and artifacts/model.joblib stores the selected pipeline.")
+    deliverable(doc, 4, "Unit tests", "tests/test_data.py, test_model.py, and test_api.py cover data, training, and serving behavior. The folder is named tests/ rather than test/.")
+    deliverable(doc, 5, "GitHub Actions workflow", ".github/workflows/ci.yml runs Ruff, Pytest, data preparation, EDA, training, Docker build, and artifact upload on each push and pull request.")
+    deliverable(doc, 6, "Deployment manifests", "k8s/deployment.yaml and k8s/service.yaml deploy the API and a local LoadBalancer Service to Docker Desktop Kubernetes.")
+    deliverable(doc, 7, "Screenshot folder", "screenshots/ contains the ten named Windows evidence images and extra MLflow captures; screenshots/README.md identifies each main image.")
+    deliverable(doc, 8, "Final written report", "reports/Final_Report.docx is this ten-page report with EDA, results, MLflow, architecture, CI, Docker, Kubernetes, and monitoring evidence.")
+    deliverable(doc, 9, "Local API access instructions", "README.md and WINDOWS_RUNBOOK.md explain localhost:8000/health, POST /predict using sample_request.json, /monitor, and /metrics. No public URL is claimed.")
+    para(doc, "Video is a separate submission item; see VIDEO_SCRIPT.md.")
 
     page(doc, "1 Objective and system architecture")
     para(doc, "The task is binary classification: target 0 means absence; original targets 1 through 4 mean presence. The system accepts the 13 UCI predictors and returns a class plus a model probability. It is designed as an educational production pattern with separable data, training, serving, CI, and monitoring components.")
