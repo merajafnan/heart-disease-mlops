@@ -1,25 +1,32 @@
 # Run the project on Windows with WSL
 
-This is the full runbook for the Windows laptop. WSL lets you use Linux Python and Docker commands while the project stays on the Windows D drive. Docker Desktop shares its Linux engine with Ubuntu. Use Windows PowerShell for the Docker Desktop Kubernetes cluster and its `kubectl` context.
+This is the full runbook for a Windows laptop. WSL lets you use Linux Python and Docker commands while the project stays in your chosen Windows folder. Docker Desktop shares its Linux engine with Ubuntu. Use Windows PowerShell for the Docker Desktop Kubernetes cluster and its `kubectl` context.
 
-The commands below use this project folder:
+Open the cloned `heart-disease-mlops` folder in File Explorer. It must contain `requirements.txt` and `sample_request.json`. Use **Open in Terminal** to start PowerShell in that folder. Keep it as your working folder. When you need another terminal, open a new one in the same folder.
 
-- Windows PowerShell: `D:\MTECH\Assignment\mlops\heart-disease-mlops-starter\heart-disease-mlops`
-- WSL Ubuntu: `/mnt/d/MTECH/Assignment/mlops/heart-disease-mlops-starter/heart-disease-mlops`
-
-Change both paths if your checkout is elsewhere. Run each command in the shell named above its code block. Do not use a PowerShell command in Ubuntu or a Linux command in PowerShell.
+Run each command in the shell named above its code block. Do not use a PowerShell command in Ubuntu or a Linux command in PowerShell.
 
 ## 1. Check Windows tools and start Ubuntu
 
 Open Docker Desktop. In **Windows PowerShell**, run:
 
 ```powershell
+Test-Path .\requirements.txt
 wsl -l -v
 docker version
 wsl -d Ubuntu
 ```
 
-Ubuntu must use WSL version 2. `docker version` must show both a client and a server. If Ubuntu is absent, run `wsl --install -d Ubuntu` in PowerShell, restart Windows if requested, and create your Ubuntu account. Then run `wsl -d Ubuntu` again.
+`Test-Path` must return `True`. Ubuntu must use WSL version 2. `docker version` must show both a client and a server. If Ubuntu is absent, run `wsl --install -d Ubuntu` in PowerShell, restart Windows if requested, and create your Ubuntu account. Then open PowerShell in the project folder and run `wsl -d Ubuntu` again.
+
+In **WSL Ubuntu**, check that you are in the project folder:
+
+```bash
+pwd
+ls requirements.txt sample_request.json
+```
+
+If either file is missing, exit Ubuntu, open PowerShell in the folder that contains those files, and start Ubuntu from there.
 
 ## 2. Connect Docker Desktop to WSL
 
@@ -46,12 +53,9 @@ sudo apt install -y python3-venv python3-pip git curl
 
 ## 3. Set up Python and run the project
 
-In **WSL Ubuntu**, enter the project folder and create a Linux virtual environment:
+In **WSL Ubuntu**, create a Linux virtual environment:
 
 ```bash
-cd /mnt/d/MTECH/Assignment/mlops/heart-disease-mlops-starter/heart-disease-mlops
-pwd
-ls requirements.txt sample_request.json
 mkdir -p ~/.venvs
 python3 -m venv ~/.venvs/heart-disease-mlops
 source ~/.venvs/heart-disease-mlops/bin/activate
@@ -60,7 +64,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-Use the same `cd` and `source` commands in each new WSL terminal. Run the data, EDA, checks, and training commands in **WSL Ubuntu**:
+For each new WSL terminal, first open PowerShell in the project folder, run `wsl -d Ubuntu`, and activate the environment with `source ~/.venvs/heart-disease-mlops/bin/activate`. Run the data, EDA, checks, and training commands in **WSL Ubuntu**:
 
 ```bash
 python -m heart_mlops.data
@@ -93,10 +97,9 @@ docker build --build-arg PYTHON_VERSION="$PYTHON_TAG" -t heart-disease-api:local
 docker run --name heart-disease-demo --rm -p 8000:8000 heart-disease-api:local
 ```
 
-Leave this terminal open. In a **second WSL Ubuntu terminal**, run:
+Leave this terminal open. Open another PowerShell terminal in the project folder and run `wsl -d Ubuntu`. In that **second WSL Ubuntu terminal**, run:
 
 ```bash
-cd /mnt/d/MTECH/Assignment/mlops/heart-disease-mlops-starter/heart-disease-mlops
 curl -s http://localhost:8000/health
 curl -s -X POST http://localhost:8000/predict -H 'Content-Type: application/json' --data @sample_request.json
 curl -s http://localhost:8000/stats
@@ -108,10 +111,10 @@ Open `http://localhost:8000/monitor` in a **Windows browser**. Capture the image
 
 ## 6. Deploy to Docker Desktop Kubernetes
 
-In Docker Desktop, enable Kubernetes and wait for it to start. Then open **Windows PowerShell** and run:
+In Docker Desktop, enable Kubernetes and wait for it to start. Open **Windows PowerShell** in the project folder and run:
 
 ```powershell
-cd D:\MTECH\Assignment\mlops\heart-disease-mlops-starter\heart-disease-mlops
+Test-Path .\requirements.txt
 kubectl config use-context docker-desktop
 kubectl get nodes
 docker image inspect heart-disease-api:local --format '{{.Id}}'
@@ -121,7 +124,7 @@ kubectl rollout status deployment/heart-disease-api
 kubectl get pods,svc
 ```
 
-The node must show `Ready`. The image check must return an image ID. The pod must show `Running` and `1/1` Ready. The Service must show `LoadBalancer` and port 8000.
+`Test-Path` must return `True`. The node must show `Ready`. The image check must return an image ID. The pod must show `Running` and `1/1` Ready. The Service must show `LoadBalancer` and port 8000.
 
 Test the API in **Windows PowerShell**:
 
@@ -139,18 +142,16 @@ Open `http://localhost:8000/monitor` in a **Windows browser**. Capture the Ready
 
 In a **Windows browser**, open the repository's GitHub **Actions** tab. Check the latest `Heart disease ML CI` run and its artifact. Save the screenshots named in `screenshots/README.md`.
 
-To rebuild the report, run these commands in **WSL Ubuntu**:
+To rebuild the report, open PowerShell in the project folder and run `wsl -d Ubuntu`. Then run these commands in **WSL Ubuntu**:
 
 ```bash
-cd /mnt/d/MTECH/Assignment/mlops/heart-disease-mlops-starter/heart-disease-mlops
 source ~/.venvs/heart-disease-mlops/bin/activate
 python tools/build_report.py --final --repo-url https://github.com/merajafnan/heart-disease-mlops
 ```
 
-Open `reports/Final_Report.docx` in **Windows Word**. Check its ten pages and images. Close Word before staging files. In **Windows PowerShell**, run:
+Open `reports/Final_Report.docx` in **Windows Word**. Check its ten pages and images. Close Word before staging files. Open **Windows PowerShell** in the project folder and run:
 
 ```powershell
-cd D:\MTECH\Assignment\mlops\heart-disease-mlops-starter\heart-disease-mlops
 git status -sb
 git add screenshots reports artifacts data
 git commit -m "Add Windows run evidence and final report"

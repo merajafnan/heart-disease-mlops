@@ -218,7 +218,7 @@ def build(final=False, repo_url=""):
         "python -m pytest -q",
         "python -m heart_mlops.train",
     ])
-    para(doc, "Build the API image in WSL. Then apply the two Kubernetes files from Windows PowerShell. RUNBOOK.md gives the full path and commands.")
+    para(doc, "Build the API image in WSL. Then apply the two Kubernetes files from Windows PowerShell. RUNBOOK.md gives the commands and identifies the shell for each step.")
     code_lines(doc, [
         "docker build --build-arg PYTHON_VERSION=3.12 -t heart-disease-api:local .",
         "kubectl apply -f k8s\\deployment.yaml",
