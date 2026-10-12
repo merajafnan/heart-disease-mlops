@@ -193,14 +193,14 @@ def build(final=False, repo_url=""):
     para(doc, ("The Windows run used Python " if final else "The development run used Python ") + meta["python_version"] + ("." if final else " Confirm these values after the Windows run."))
     doc.add_heading("Deliverables and file locations", level=1)
     deliverable(doc, 1, "Code, Dockerfile, dependencies", "heart_mlops/ contains the code. Dockerfile builds the API image. requirements.txt and requirements-api.txt list the packages.")
-    deliverable(doc, 2, "Cleaned data and download instructions", "data/processed/ has the clean CSV and data_summary.json. heart_mlops/data.py downloads and cleans the UCI file. WSL_RUNBOOK.md gives the command.")
+    deliverable(doc, 2, "Cleaned data and download instructions", "data/processed/ has the clean CSV and data_summary.json. heart_mlops/data.py downloads and cleans the UCI file. RUNBOOK.md gives the command.")
     deliverable(doc, 3, "EDA, training, inference", "heart_mlops/ has eda.py, train.py, predict.py, and api.py. reports/figures/ has the plots. artifacts/model.joblib has the fitted model.")
     deliverable(doc, 4, "Unit tests", "tests/ has test_data.py, test_model.py, and test_api.py. These tests cover the data, model, and API.")
     deliverable(doc, 5, "GitHub Actions workflow", ".github/workflows/ci.yml runs Ruff, Pytest, data preparation, EDA, model training, and a Docker build. It uploads the run files.")
     deliverable(doc, 6, "Deployment manifests", "k8s/deployment.yaml starts the API pod. k8s/service.yaml gives it a local LoadBalancer Service on port 8000.")
     deliverable(doc, 7, "Screenshot folder", "screenshots/ has the ten main Windows screenshots and extra MLflow views. screenshots/README.md lists the main images.")
     deliverable(doc, 8, "Final written report", "reports/Final_Report.docx is this ten-page report. It includes the results, system diagram, and run screenshots.")
-    deliverable(doc, 9, "Local API access instructions", "README.md and WINDOWS_RUNBOOK.md give the localhost:8000 URLs and test commands. The API has no public URL.")
+    deliverable(doc, 9, "Local API access instructions", "README.md and RUNBOOK.md give the localhost:8000 URLs and test commands. The API has no public URL.")
 
     page(doc, "1 Objective and system architecture")
     para(doc, "This task has two classes. Target 0 means no disease. Source targets 1 through 4 mean disease is present. The API takes 13 input values. It returns a class and a model probability.")
@@ -218,7 +218,7 @@ def build(final=False, repo_url=""):
         "python -m pytest -q",
         "python -m heart_mlops.train",
     ])
-    para(doc, "Build the API image in WSL. Then apply the two Kubernetes files from Windows PowerShell. WSL_RUNBOOK.md gives the full path and commands.")
+    para(doc, "Build the API image in WSL. Then apply the two Kubernetes files from Windows PowerShell. RUNBOOK.md gives the full path and commands.")
     code_lines(doc, [
         "docker build --build-arg PYTHON_VERSION=3.12 -t heart-disease-api:local .",
         "kubectl apply -f k8s\\deployment.yaml",

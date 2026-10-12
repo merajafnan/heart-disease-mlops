@@ -10,7 +10,7 @@ This is an academic model. Its probability is a model score, not a clinical diag
 - Use Git and Docker Desktop with Linux containers and WSL integration. Enable the `docker-desktop` Kubernetes context.
 - You need internet access to install packages. You also need it if you download the UCI source file again.
 
-Use [WSL_RUNBOOK.md](WSL_RUNBOOK.md) for Linux commands. Use [WINDOWS_RUNBOOK.md](WINDOWS_RUNBOOK.md) for PowerShell and Kubernetes commands. The report is [reports/Final_Report.docx](reports/Final_Report.docx).
+Use [RUNBOOK.md](RUNBOOK.md) for the complete Windows and WSL procedure. The report is [reports/Final_Report.docx](reports/Final_Report.docx).
 
 ## Quick start
 
@@ -94,14 +94,14 @@ The repository includes the selected model, clean data, plots, and report. Git e
 ## Deliverables and file locations
 
 1. **Code, Dockerfile, dependencies:** [`heart_mlops/`](heart_mlops/) has the code. [`Dockerfile`](Dockerfile) builds the API image. [`requirements.txt`](requirements.txt) and [`requirements-api.txt`](requirements-api.txt) list the packages.
-2. **Cleaned data and download instructions:** [`data/processed/heart_disease_clean.csv`](data/processed/heart_disease_clean.csv) has the clean data. [`data/processed/data_summary.json`](data/processed/data_summary.json) has the counts. [`heart_mlops/data.py`](heart_mlops/data.py) downloads and cleans the source. [`WSL_RUNBOOK.md`](WSL_RUNBOOK.md) gives the command.
+2. **Cleaned data and download instructions:** [`data/processed/heart_disease_clean.csv`](data/processed/heart_disease_clean.csv) has the clean data. [`data/processed/data_summary.json`](data/processed/data_summary.json) has the counts. [`heart_mlops/data.py`](heart_mlops/data.py) downloads and cleans the source. [`RUNBOOK.md`](RUNBOOK.md) gives the command.
 3. **EDA, training, inference:** [`heart_mlops/eda.py`](heart_mlops/eda.py), [`heart_mlops/train.py`](heart_mlops/train.py), [`heart_mlops/predict.py`](heart_mlops/predict.py), and [`heart_mlops/api.py`](heart_mlops/api.py) are the scripts. [`reports/figures/`](reports/figures/) has plots. [`artifacts/model.joblib`](artifacts/model.joblib) has the fitted model.
 4. **Unit tests:** [`tests/`](tests/) has `test_data.py`, `test_model.py`, and `test_api.py`.
 5. **GitHub Actions workflow:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs tests, model training, and the Docker build. It also uploads the run files.
 6. **Deployment manifests:** [`k8s/deployment.yaml`](k8s/deployment.yaml) starts the API pod. [`k8s/service.yaml`](k8s/service.yaml) exposes port 8000 on the local cluster.
 7. **Screenshot folder:** [`screenshots/`](screenshots/) has ten main Windows screenshots and extra MLflow views. [`screenshots/README.md`](screenshots/README.md) lists the main images.
 8. **Final written report:** [`reports/Final_Report.docx`](reports/Final_Report.docx) is the ten-page report. It includes results, figures, and run screenshots.
-9. **Local API access instructions:** This README and [`WINDOWS_RUNBOOK.md`](WINDOWS_RUNBOOK.md) give the localhost URLs and request commands. The API has no public URL.
+9. **Local API access instructions:** This README and [`RUNBOOK.md`](RUNBOOK.md) give the localhost URLs and request commands. The API has no public URL.
 
 ## Source and limitations
 
