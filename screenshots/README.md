@@ -1,17 +1,17 @@
 # Screenshot checklist
 
-Capture these on the Windows laptop after executing the runbook. Screenshots must show actual results; no synthetic evidence is included.
+Capture these results on the Windows laptop. Use the names below for the main images.
 
-1. `01-environment.png` — Python, Docker and Ready Kubernetes node.
-2. `02-eda.png` — class balance and at least one other EDA chart.
-3. `03-model-results.png` — actual comparison/test metrics and evaluation plots.
-4. `04-mlflow.png` — runs, metrics, parameters and artifacts in MLflow.
-5. `05-tests-ci.png` — green GitHub Actions workflow and artifact listing.
-6. `06-docker.png` — successful Docker build or running container.
-7. `07-docker-prediction.png` — local container `/predict` response.
-8. `08-kubernetes.png` — Ready pod and LoadBalancer Service.
-9. `09-kubernetes-prediction.png` — deployed API response.
-10. `10-monitoring.png` — `/monitor` or `/metrics` plus request logs.
+1. `01-environment.png`: Show Python, Docker, and the Ready Kubernetes node.
+2. `02-eda.png`: Show class counts and an EDA chart.
+3. `03-model-results.png`: Show model scores and test figures.
+4. `04-mlflow.png`: Show the MLflow runs and scores. Extra MLflow images show parameters and artifacts.
+5. `05-tests-ci.png`: Show the successful GitHub Actions run. `05-tests-ci-artifacts.png` shows its artifact.
+6. `06-docker.png`: Show the Docker image build.
+7. `07-docker-prediction.png`: Show the local container prediction.
+8. `08-kubernetes.png`: Show the Ready pod and LoadBalancer Service.
+9. `09-kubernetes-prediction.png`: Show the Kubernetes API prediction.
+10. `10-monitoring.png`: Show the API dashboard and request logs.
 
-Use Windows Snipping Tool or another screen capture application. Keep any account credentials, tokens, and unrelated personal information out of the images.
+Use the Windows Snipping Tool to save the images. Keep passwords, tokens, and unrelated personal data out of each image.
 

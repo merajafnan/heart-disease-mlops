@@ -91,12 +91,24 @@ def para(doc, text, style=None):
     return doc.add_paragraph(text, style=style)
 
 
+def code_lines(doc, lines):
+    block = doc.add_paragraph()
+    block.paragraph_format.left_indent = Inches(0.18)
+    block.paragraph_format.space_after = Pt(7)
+    for index, line in enumerate(lines):
+        run = block.add_run(line)
+        run.font.name = "Courier New"
+        run.font.size = Pt(8.5)
+        if index < len(lines) - 1:
+            run.add_break()
+
+
 def deliverable(doc, number, title, details):
     item = doc.add_paragraph()
     item.paragraph_format.left_indent = Inches(0.22)
     item.paragraph_format.first_line_indent = Inches(-0.22)
     item.paragraph_format.space_after = Pt(1)
-    item.add_run(f"{number}. {title} — ").bold = True
+    item.add_run(f"{number}. {title}: ").bold = True
     item.add_run(details)
 
 
@@ -167,62 +179,77 @@ def build(final=False, repo_url=""):
         border.getparent().remove(border)
 
     doc.add_paragraph("Heart Disease Classification MLOps Experimental Learning Report", style="Title")
-    para(doc, "End to end model development, experiment tracking, CI, containerization, local Kubernetes deployment, and monitoring")
+    para(doc, "This report covers model tests, experiment records, the API, and local Kubernetes deployment.")
     para(doc, "Prepared for the MLOps experimental learning assignment")
     para(doc, "Dataset: UCI processed Cleveland Heart Disease records")
     doc.add_heading("Project summary", level=1)
-    para(doc, "This project implements a reproducible educational classifier for the presence of heart disease in the UCI processed Cleveland dataset. The pipeline covers data acquisition, quality checks, exploratory analysis, model comparison, experiment logging, tested API serving, containerization, and deployment manifests. " + ("Windows runtime evidence is included in the later sections." if final else "Windows runtime evidence is added after the accompanying runbook has been executed."))
+    para(doc, "This project classifies the UCI processed Cleveland heart disease records. It downloads and cleans the data, compares two models, and records the results in MLflow. FastAPI serves the selected model. Docker Desktop Kubernetes runs the API on the Windows laptop." + (" The report includes screenshots from that run." if final else " Add screenshots after the Windows run."))
     add_table(doc, ["Measure", "Windows run result" if final else "Development run result"], [
         ("Clean records", meta["data_summary"]["clean_rows"]),
         ("Selected model", meta["selected_model"].replace("_", " ").title()),
         ("Held out test accuracy", f"{meta['test_metrics']['accuracy']:.3f}"),
         ("Held out test ROC-AUC", f"{meta['test_metrics']['roc_auc']:.3f}"),
     ])
-    para(doc, ("The figures and metrics come from the Windows run using Python " if final else "The figures in this draft come from an actual local development run using Python ") + meta["python_version"] + ("." if final else ". The Windows run should be used to confirm the final submission values."))
+    para(doc, ("The Windows run used Python " if final else "The development run used Python ") + meta["python_version"] + ("." if final else " Confirm these values after the Windows run."))
     doc.add_heading("Deliverables and file locations", level=1)
-    deliverable(doc, 1, "Code, Dockerfile, dependencies", "heart_mlops/ contains the application code; Dockerfile builds the serving image; requirements.txt and requirements-api.txt list dependencies.")
-    deliverable(doc, 2, "Cleaned data and download instructions", "data/processed/heart_disease_clean.csv and data_summary.json contain prepared data; heart_mlops/data.py downloads and cleans the UCI source. WSL_RUNBOOK.md gives the command.")
-    deliverable(doc, 3, "EDA, training, inference", "heart_mlops/eda.py, train.py, predict.py, and api.py are the requested scripts; reports/figures/ contains plots, and artifacts/model.joblib stores the selected pipeline.")
-    deliverable(doc, 4, "Unit tests", "tests/test_data.py, test_model.py, and test_api.py cover data, training, and serving behavior. The folder is named tests/ rather than test/.")
-    deliverable(doc, 5, "GitHub Actions workflow", ".github/workflows/ci.yml runs Ruff, Pytest, data preparation, EDA, training, Docker build, and artifact upload on each push and pull request.")
-    deliverable(doc, 6, "Deployment manifests", "k8s/deployment.yaml and k8s/service.yaml deploy the API and a local LoadBalancer Service to Docker Desktop Kubernetes.")
-    deliverable(doc, 7, "Screenshot folder", "screenshots/ contains the ten named Windows evidence images and extra MLflow captures; screenshots/README.md identifies each main image.")
-    deliverable(doc, 8, "Final written report", "reports/Final_Report.docx is this ten-page report with EDA, results, MLflow, architecture, CI, Docker, Kubernetes, and monitoring evidence.")
-    deliverable(doc, 9, "Local API access instructions", "README.md and WINDOWS_RUNBOOK.md explain localhost:8000/health, POST /predict using sample_request.json, /monitor, and /metrics. No public URL is claimed.")
-    para(doc, "Video is a separate submission item; see VIDEO_SCRIPT.md.")
+    deliverable(doc, 1, "Code, Dockerfile, dependencies", "heart_mlops/ contains the code. Dockerfile builds the API image. requirements.txt and requirements-api.txt list the packages.")
+    deliverable(doc, 2, "Cleaned data and download instructions", "data/processed/ has the clean CSV and data_summary.json. heart_mlops/data.py downloads and cleans the UCI file. WSL_RUNBOOK.md gives the command.")
+    deliverable(doc, 3, "EDA, training, inference", "heart_mlops/ has eda.py, train.py, predict.py, and api.py. reports/figures/ has the plots. artifacts/model.joblib has the fitted model.")
+    deliverable(doc, 4, "Unit tests", "tests/ has test_data.py, test_model.py, and test_api.py. These tests cover the data, model, and API.")
+    deliverable(doc, 5, "GitHub Actions workflow", ".github/workflows/ci.yml runs Ruff, Pytest, data preparation, EDA, model training, and a Docker build. It uploads the run files.")
+    deliverable(doc, 6, "Deployment manifests", "k8s/deployment.yaml starts the API pod. k8s/service.yaml gives it a local LoadBalancer Service on port 8000.")
+    deliverable(doc, 7, "Screenshot folder", "screenshots/ has the ten main Windows screenshots and extra MLflow views. screenshots/README.md lists the main images.")
+    deliverable(doc, 8, "Final written report", "reports/Final_Report.docx is this ten-page report. It includes the results, system diagram, and run screenshots.")
+    deliverable(doc, 9, "Local API access instructions", "README.md and WINDOWS_RUNBOOK.md give the localhost:8000 URLs and test commands. The API has no public URL.")
 
     page(doc, "1 Objective and system architecture")
-    para(doc, "The task is binary classification: target 0 means absence; original targets 1 through 4 mean presence. The system accepts the 13 UCI predictors and returns a class plus a model probability. It is designed as an educational production pattern with separable data, training, serving, CI, and monitoring components.")
+    para(doc, "This task has two classes. Target 0 means no disease. Source targets 1 through 4 mean disease is present. The API takes 13 input values. It returns a class and a model probability.")
     figure(doc, "architecture.png", "Figure 1  Assignment system architecture", 6.6)
-    para(doc, "Training creates a fitted preprocessing and classifier pipeline. MLflow records model comparisons and artifacts. The selected pipeline is serialized and included in the Docker image. Docker Desktop Kubernetes hosts one API replica behind a LoadBalancer Service. Prometheus format metrics and structured request logs describe service activity.")
+    para(doc, "The training script fits preprocessing and the classifier in one pipeline. MLflow stores the run results. The Docker image contains the selected pipeline. Docker Desktop Kubernetes runs one API pod. The service reports request counts and writes request logs.")
     doc.add_heading("Setup and local API access", level=2)
-    para(doc, "The final run used Ubuntu 24.04 in WSL 2 with Python 3.12.3 and Docker Desktop's WSL integration. From the repository root, create and activate a Linux virtual environment with `python3 -m venv ~/.venvs/heart-disease-mlops` and `source ~/.venvs/heart-disease-mlops/bin/activate`. Install dependencies using `python -m pip install -r requirements.txt`. Run `python -m heart_mlops.data`, `python -m heart_mlops.eda`, `ruff check .`, `python -m pytest -q`, and `python -m heart_mlops.train` in that order. WSL_RUNBOOK.md gives the full Windows-to-Linux path and commands.")
-    para(doc, "Build the local image with `docker build --build-arg PYTHON_VERSION=3.12 -t heart-disease-api:local .`. With Docker Desktop Kubernetes enabled, apply `k8s/deployment.yaml` and `k8s/service.yaml` from Windows PowerShell. The local LoadBalancer serves `http://localhost:8000/health`, `POST http://localhost:8000/predict` using `sample_request.json`, and `http://localhost:8000/monitor`; `GET /metrics` exposes Prometheus text. The endpoint is available while the laptop's cluster is running.")
+    para(doc, "The final run used Ubuntu 24.04 in WSL 2, Python 3.12.3, and Docker Desktop. From the repository root, run these commands in Ubuntu:")
+    code_lines(doc, [
+        "python3 -m venv ~/.venvs/heart-disease-mlops",
+        "source ~/.venvs/heart-disease-mlops/bin/activate",
+        "python -m pip install -r requirements.txt",
+        "python -m heart_mlops.data",
+        "python -m heart_mlops.eda",
+        "ruff check .",
+        "python -m pytest -q",
+        "python -m heart_mlops.train",
+    ])
+    para(doc, "Build the API image in WSL. Then apply the two Kubernetes files from Windows PowerShell. WSL_RUNBOOK.md gives the full path and commands.")
+    code_lines(doc, [
+        "docker build --build-arg PYTHON_VERSION=3.12 -t heart-disease-api:local .",
+        "kubectl apply -f k8s\\deployment.yaml",
+        "kubectl apply -f k8s\\service.yaml",
+    ])
+    para(doc, "The service is at http://localhost:8000 while Docker Desktop Kubernetes runs. Use /health to check readiness. Send sample_request.json to POST /predict. Open /monitor for counts or /metrics for Prometheus text.")
 
     page(doc, "2 Data source and preparation")
-    para(doc, "The source is the UCI processed Cleveland Heart Disease file, with 303 rows, 13 predictors, and the original 0–4 target. The download script verifies a SHA-256 digest. Numeric parsing converts the source's question mark missing marker to null; cleaning removes incomplete and duplicate records and maps targets 1–4 to class 1.")
+    para(doc, "The UCI processed Cleveland file has 303 rows, 13 inputs, and a target from 0 to 4. The download script checks the SHA-256 digest. It converts question marks to missing values. It removes incomplete or duplicate rows. It maps targets 1 through 4 to class 1.")
     add_table(doc, ["Data check", "Observed result"], [
         ("Raw rows", meta["data_summary"]["raw_rows"]),
         ("Rows after cleaning", meta["data_summary"]["clean_rows"]),
         ("Rows removed", meta["data_summary"]["removed_missing_or_duplicate_rows"]),
         ("Absent / present", f"{meta['data_summary']['negative_count']} / {meta['data_summary']['positive_count']}"),
     ])
-    para(doc, "The resulting CSV and summary JSON are committed as reusable inputs. The model pipeline still includes imputation for future inputs. No imputation statistics or scaling factors are learned from the held out test set or validation fold.")
-    para(doc, "Feature groups: age, resting blood pressure, cholesterol, maximum heart rate, and ST depression are treated as numeric; the other eight predictors are encoded as categorical values. The target is excluded from all feature transformations.")
+    para(doc, "The repository has the clean CSV and a JSON file with row counts. The model pipeline can fill missing values in future requests. It learns these values from each training fold. The test rows do not set them.")
+    para(doc, "Numeric inputs are age, resting blood pressure, cholesterol, maximum heart rate, and ST depression. The pipeline encodes the other eight inputs as categories. It does not use the target as an input.")
 
     page(doc, "3 Exploratory data analysis")
-    para(doc, "The cleaned classes are moderately balanced: 160 records with absence and 137 with presence. The plots show the target distribution and numeric feature ranges before fitting any model.")
+    para(doc, "The clean data has 160 class 0 rows and 137 class 1 rows. These plots show class counts and numeric values before model training.")
     figure(doc, "class_balance.png", "Figure 2  Cleaned dataset class balance", 4.0)
     figure(doc, "numeric_histograms.png", "Figure 3  Numeric predictor distributions", 5.2)
 
     page(doc, "4 Feature engineering and visual findings")
-    para(doc, "The correlation heatmap is descriptive rather than a feature selection rule. Correlation does not establish clinical causation, and the small dataset makes visual differences uncertain. Box plots provide a compact comparison of age and maximum heart rate by target class.")
+    para(doc, "The heatmap shows correlations between numeric inputs. It does not select features or show clinical cause. The box plots compare age and maximum heart rate by class. The small dataset limits these visual comparisons.")
     figure(doc, "correlation_heatmap.png", "Figure 4  Pairwise numeric correlations", 4.6)
     figure(doc, "feature_by_target.png", "Figure 5  Age and maximum heart rate by class", 5.0)
 
     page(doc, "5 Model design and selection")
-    para(doc, "The cleaned data is stratified into 80% training and 20% test partitions with seed 42. Each model's hyperparameters are evaluated by five stratified cross validation folds on the training partition. The pipeline fits imputation, scaling, and categorical encoding inside each fold, preventing preprocessing leakage.")
-    para(doc, "Logistic Regression offers an interpretable linear baseline. Random Forest provides a nonlinear comparison. The highest mean validation ROC-AUC selects the final model. Accuracy, precision, and recall are also recorded to show different error tradeoffs.")
+    para(doc, "The script uses seed 42 to split the data. It puts 80% in training and 20% in testing. Five stratified folds test each parameter set. Numeric inputs use median imputation and scaling. Categorical inputs use mode imputation and one-hot encoding. The pipeline fits preprocessing inside each fold.")
+    para(doc, "Logistic Regression is the linear baseline. Random Forest is the nonlinear model. The script selects the model with the highest mean validation ROC-AUC. It also records accuracy, precision, and recall.")
     rows = []
     for name, values in meta["candidate_cv_metrics"].items():
         rows.append((name.replace("_", " ").title(), *(f"{values[key]:.3f}" for key in ("accuracy", "precision", "recall", "roc_auc"))))
@@ -233,7 +260,7 @@ def build(final=False, repo_url=""):
     test = meta["test_metrics"]
     tn, fp = test["confusion_matrix"][0]
     fn, tp = test["confusion_matrix"][1]
-    para(doc, "After cross validation chose " + meta["selected_model"].replace("_", " ") + f", the held out test partition was evaluated once. The test split contains {tn+fp+fn+tp} records. The confusion matrix shows {tn} true negatives, {fp} false positives, {fn} false negatives, and {tp} true positives.")
+    para(doc, "Cross validation selected " + meta["selected_model"].replace("_", " ") + f". The script then tested it once on {tn+fp+fn+tp} held-out rows. The confusion matrix shows {tn} true negatives, {fp} false positives, {fn} false negatives, and {tp} true positives.")
     add_table(doc, ["Metric", "Test result"], [
         ("Accuracy", f"{test['accuracy']:.3f}"), ("Precision", f"{test['precision']:.3f}"),
         ("Recall", f"{test['recall']:.3f}"), ("ROC-AUC", f"{test['roc_auc']:.3f}"),
@@ -242,24 +269,24 @@ def build(final=False, repo_url=""):
     figure(doc, "test_roc_curve.png", "Figure 8  Test ROC curve", 3.3)
 
     page(doc, "7 Experiment tracking and reproducibility")
-    para(doc, "MLflow records a run for each candidate and a final selected model run. Each candidate run contains the best grid parameters, mean cross validation metrics, full search results, and a candidate score plot. The final run contains held out metrics, evaluation figures, metadata, and the fitted model. SQLite stores run metadata locally; CI uploads the generated store as a workflow artifact.")
+    para(doc, "MLflow stores one run for each candidate model and one run for the selected model. Candidate runs include parameters, validation scores, search results, and plots. The selected run includes test scores, figures, metadata, and the fitted model. SQLite stores run metadata. Artifact files remain on disk. GitHub Actions uploads both.")
     evidence(doc, "04-mlflow.png", "Figure 9  MLflow candidate and selected run metrics", 5.7, 3.6)
-    para(doc, "The joblib file contains the full fitted preprocessing and classifier pipeline. Model metadata records the source checksum, selected parameters, features, seed, package version, and actual test metrics. Requirements and the raw download script allow a clean rebuild.")
+    para(doc, "The joblib file contains the fitted preprocessing and classifier. Model metadata lists the source checksum, selected parameters, inputs, seed, package version, and test scores. The requirements and download script support a new run.")
 
     page(doc, "8 Quality checks and continuous integration")
-    para(doc, "Unit tests cover target mapping and missing data, invalid source targets, pipeline fitting and probability output, API input validation, readiness, and monitoring endpoints. GitHub Actions runs Ruff, Pytest, data preparation, EDA, training, and a Docker image build. A failure in any required step fails the workflow; generated model and experiment files are uploaded for inspection.")
+    para(doc, "Unit tests check target mapping, missing data, invalid targets, model output, API inputs, readiness, and monitoring endpoints. GitHub Actions runs Ruff, Pytest, data preparation, EDA, model training, and a Docker build. A failed required step marks the job as failed. The upload step still saves model and experiment files.")
     evidence(doc, "05-tests-ci.png", "Figure 10  Passing GitHub Actions workflow", 5.5)
     evidence(doc, "05-tests-ci-artifacts.png", "Figure 11  Uploaded workflow artifact", 5.1, 1.1)
     evidence(doc, "06-docker.png", "Figure 12  Local Docker image build", 5.0)
     evidence(doc, "07-docker-prediction.png", "Figure 13  Local container prediction and request logs", 5.4, 1.55)
 
     page(doc, "9 Deployment monitoring and limitations")
-    para(doc, "Docker Desktop Kubernetes deploys one API replica with health probes, CPU/memory limits, and a LoadBalancer Service on port 8000. The API provides `/predict`, `/health`, `/metrics`, `/monitor`, and OpenAPI documentation. Request logs contain only method, route, status, and duration; patient feature values are not logged.")
-    para(doc, "The sample_request.json tests against the local container and Kubernetes service returned class 1, positive-class model probability 0.9837, and confidence 0.9837. This example score is not a validated clinical risk estimate.")
+    para(doc, "Docker Desktop Kubernetes runs one API pod. The deployment sets health probes and CPU and memory limits. A LoadBalancer Service uses port 8000. The API has /predict, /health, /metrics, /monitor, and OpenAPI documentation. Logs contain method, route, status, and duration. They omit patient values.")
+    para(doc, "The sample request returned class 1 from both the container and Kubernetes service. Its positive-class probability and confidence were 0.9837. This score is not a validated clinical risk estimate.")
     evidence(doc, "08-kubernetes.png", "Figure 14  Ready Kubernetes pod and LoadBalancer Service", 5.2)
     evidence(doc, "09-kubernetes-prediction.png", "Figure 15  Prediction from the deployed Kubernetes API", 5.3, 0.8)
     evidence(doc, "10-monitoring.png", "Figure 16  Live API monitoring dashboard", 5.2)
-    para(doc, "Limitations: the dataset is small and historical, no external validation or fairness assessment was performed, and predicted probabilities are not calibrated clinical risks. The local Kubernetes endpoint is accessible from the laptop, not a public internet URL.")
+    para(doc, "The dataset is small and historical. This work has no external validation or fairness assessment. Model probabilities are not calibrated clinical risks. The Kubernetes API is available only on the local laptop.")
     para(doc, "Repository: " + (repo_url or "Add the GitHub URL after publishing the project."))
     para(doc, "Source: Janosi et al., Heart Disease, UCI Machine Learning Repository, 1988. https://doi.org/10.24432/C52P4X")
 
