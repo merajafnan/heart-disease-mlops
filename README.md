@@ -6,21 +6,20 @@ An end-to-end educational ML system for the UCI processed Cleveland dataset. It 
 
 ## Requirements
 
-- Python 3.14 (the provided Windows environment); Python 3.12 may also work, but the supplied CI and Docker image use 3.14.
-- Git for Windows, Docker Desktop in Linux containers mode, and Docker Desktop Kubernetes with context `docker-desktop`.
+- Python 3.12 in Ubuntu 24.04 under WSL 2 was used for the final local run. CI uses Python 3.14; the Dockerfile accepts a Python version build argument so the local image can match WSL.
+- Git, Docker Desktop in Linux containers mode with WSL integration, and Docker Desktop Kubernetes with context `docker-desktop`.
 - Internet for the initial Python dependency installation and, if restoring the raw file, the UCI download.
 
-See [WINDOWS_RUNBOOK.md](WINDOWS_RUNBOOK.md) for copy-and-paste PowerShell instructions.
-If you prefer Linux commands through Windows Subsystem for Linux, use [WSL_RUNBOOK.md](WSL_RUNBOOK.md). It uses Docker Desktop's WSL integration and the same D-drive project folder.
-The report builder in `tools/build_report.py` reads actual training metadata and inserts the Windows screenshots once they exist. `reports/Report_Draft.docx` is the current 10-page draft; use the runbook to produce `reports/Final_Report.docx` after the Windows evidence is captured.
+See [WSL_RUNBOOK.md](WSL_RUNBOOK.md) for the tested WSL workflow and [WINDOWS_RUNBOOK.md](WINDOWS_RUNBOOK.md) for PowerShell instructions. The report builder in `tools/build_report.py` reads training metadata and the captured Windows screenshots. The completed ten-page report is [reports/Final_Report.docx](reports/Final_Report.docx).
 
 ## Quick start
 
-Run from this repository root. In PowerShell:
+Run from this repository root in Ubuntu/WSL:
 
-```powershell
-py -3.14 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+```bash
+mkdir -p ~/.venvs
+python3 -m venv ~/.venvs/heart-disease-mlops
+source ~/.venvs/heart-disease-mlops/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m heart_mlops.data
@@ -31,7 +30,7 @@ python -m heart_mlops.train
 mlflow ui --backend-store-uri sqlite:///mlruns/mlflow.db --port 5000
 ```
 
-The final command stays running; open `http://127.0.0.1:5000` for the experiment UI. If your installed interpreter is 3.12, replace `py -3.14` with `py -3.12` when creating the virtual environment.
+The final command stays running; open `http://127.0.0.1:5000` for the experiment UI in the Windows browser.
 
 ## Data and modeling
 
@@ -64,14 +63,15 @@ Use `sample_request.json` for a valid sample. The response gives a binary predic
 
 ## Docker and Kubernetes
 
-`docker build` requires `artifacts/model.joblib`, so train first. The default Docker Python is 3.14; the WSL guide passes its active Python minor version as a build argument to match the environment that saved the model. Build and run from Windows PowerShell:
+`docker build` requires `artifacts/model.joblib`, so train first. The default Docker Python is 3.14; pass the WSL Python minor version as a build argument to match the environment that saved the model. Build and run in WSL:
 
-```powershell
-docker build -t heart-disease-api:local .
+```bash
+PYTHON_TAG=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+docker build --build-arg PYTHON_VERSION="$PYTHON_TAG" -t heart-disease-api:local .
 docker run --rm -p 8000:8000 heart-disease-api:local
 ```
 
-In another PowerShell window, use `Invoke-RestMethod` as shown in the runbook. Then deploy the same local image to Docker Desktop's `kubeadm` Kubernetes cluster:
+In another WSL window, use the sample request as shown in the runbook. Then deploy the same local image from Windows PowerShell to Docker Desktop's Kubernetes cluster:
 
 ```powershell
 kubectl config use-context docker-desktop
@@ -88,6 +88,10 @@ The Service is type `LoadBalancer`. Docker Desktop normally makes the service av
 `.github/workflows/ci.yml` runs on pushes and pull requests. It installs dependencies, lints, runs unit tests, prepares data, creates EDA figures, trains and tracks both models, builds the Docker image, and uploads generated evidence as a workflow artifact. A lint, test, training, or build error fails the workflow.
 
 The selected model in `artifacts/` is included in the repository after training. `mlruns/` is excluded from Git because CI uploads the experiment store as a workflow artifact. The cleaned dataset, EDA figures, and report also live in the repository. CI builds its Docker image from a freshly trained model.
+
+## Submission evidence
+
+The repository contains the source and cleaned data, EDA/training/inference scripts, the fitted model and metadata, tests, workflow YAML, Dockerfile, Kubernetes manifests, all ten named Windows evidence screenshots, and the final report. See [screenshots/README.md](screenshots/README.md) for the evidence list. The only separate submission item is the short pipeline video; [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md) lists what to demonstrate.
 
 ## Repository contents
 

@@ -17,7 +17,8 @@ FIGURES = ROOT / "reports" / "figures"
 SHOTS = ROOT / "screenshots"
 METADATA = ROOT / "artifacts" / "model_metadata.json"
 SHOT_FILES = [
-    "04-mlflow.png", "05-tests-ci.png", "06-docker.png", "07-docker-prediction.png",
+    "04-mlflow.png", "05-tests-ci.png", "05-tests-ci-artifacts.png",
+    "06-docker.png", "07-docker-prediction.png",
     "08-kubernetes.png", "09-kubernetes-prediction.png", "10-monitoring.png",
 ]
 
@@ -38,24 +39,24 @@ def architecture_image():
     canvas = Image.new("RGB", (1350, 490), "white")
     draw = ImageDraw.Draw(canvas)
     boxes = [
-        (30, 130, 245, 305, "UCI data\nCleaning and EDA"),
-        (300, 130, 515, 305, "Cross validation\nTwo classifiers"),
-        (570, 130, 785, 305, "MLflow tracking\nSelected pipeline"),
-        (840, 130, 1055, 305, "FastAPI\nDocker image"),
-        (1110, 130, 1325, 305, "Kubernetes\nAPI and metrics"),
+        (30, 130, 245, 305, "UCI data\nEDA"),
+        (300, 130, 515, 305, "Training\nTwo models"),
+        (570, 130, 785, 305, "MLflow\nModel"),
+        (840, 130, 1055, 305, "FastAPI\nDocker"),
+        (1110, 130, 1325, 305, "Kubernetes\nMonitoring"),
     ]
     for x1, y1, x2, y2, label in boxes:
         draw.rounded_rectangle((x1, y1, x2, y2), radius=18, fill="#eaf1f7", outline="#526b80", width=3)
-        bbox = draw.multiline_textbbox((0, 0), label, font=font(20, True), spacing=9, align="center")
+        bbox = draw.multiline_textbbox((0, 0), label, font=font(28, True), spacing=9, align="center")
         w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
         draw.multiline_text((x1 + (x2-x1-w)/2, y1 + (y2-y1-h)/2), label,
-                            fill="#172b3c", font=font(20, True), spacing=9, align="center")
+                            fill="#172b3c", font=font(28, True), spacing=9, align="center")
     for x in (250, 520, 790, 1060):
         draw.line((x, 215, x+42, 215), fill="#526b80", width=5)
         draw.polygon(((x+42, 215), (x+28, 205), (x+28, 225)), fill="#526b80")
     draw.text((335, 55), "GitHub Actions: lint  |  tests  |  training  |  image build",
-              fill="#172b3c", font=font(28, True))
-    draw.text((890, 365), "Logs + /metrics + /monitor", fill="#172b3c", font=font(26))
+              fill="#172b3c", font=font(32, True))
+    draw.text((890, 365), "Logs + /metrics + /monitor", fill="#172b3c", font=font(30))
     canvas.save(path)
     return path
 
@@ -162,18 +163,29 @@ def build(final=False, repo_url=""):
     para(doc, "Dataset: UCI processed Cleveland Heart Disease records")
     doc.add_heading("Project summary", level=1)
     para(doc, "This project implements a reproducible educational classifier for the presence of heart disease in the UCI processed Cleveland dataset. The pipeline covers data acquisition, quality checks, exploratory analysis, model comparison, experiment logging, tested API serving, containerization, and deployment manifests. " + ("Windows runtime evidence is included in the later sections." if final else "Windows runtime evidence is added after the accompanying runbook has been executed."))
-    add_table(doc, ["Measure", "Development run result"], [
+    add_table(doc, ["Measure", "Windows run result" if final else "Development run result"], [
         ("Clean records", meta["data_summary"]["clean_rows"]),
         ("Selected model", meta["selected_model"].replace("_", " ").title()),
         ("Held out test accuracy", f"{meta['test_metrics']['accuracy']:.3f}"),
         ("Held out test ROC-AUC", f"{meta['test_metrics']['roc_auc']:.3f}"),
     ])
     para(doc, ("The figures and metrics come from the Windows run using Python " if final else "The figures in this draft come from an actual local development run using Python ") + meta["python_version"] + ("." if final else ". The Windows run should be used to confirm the final submission values."))
+    doc.add_heading("Submission contents", level=1)
+    add_table(doc, ["Deliverable", "Repository location"], [
+        ("Source and install files", "heart_mlops/; requirements.txt; requirements-api.txt; Dockerfile"),
+        ("Data and saved model", "data/raw/; data/processed/; artifacts/model.joblib; artifacts/model_metadata.json"),
+        ("Tests, CI, and deployment", "tests/; .github/workflows/ci.yml; k8s/deployment.yaml; k8s/service.yaml"),
+        ("Evidence and documentation", "screenshots/; reports/Final_Report.docx; README.md; WINDOWS_RUNBOOK.md; WSL_RUNBOOK.md"),
+    ])
+    para(doc, "The short pipeline demonstration is a separate submission item; VIDEO_SCRIPT.md lists the scenes and evidence to show.")
 
     page(doc, "1 Objective and system architecture")
     para(doc, "The task is binary classification: target 0 means absence; original targets 1 through 4 mean presence. The system accepts the 13 UCI predictors and returns a class plus a model probability. It is designed as an educational production pattern with separable data, training, serving, CI, and monitoring components.")
     figure(doc, "architecture.png", "Figure 1  Assignment system architecture", 6.6)
     para(doc, "Training creates a fitted preprocessing and classifier pipeline. MLflow records model comparisons and artifacts. The selected pipeline is serialized and included in the Docker image. Docker Desktop Kubernetes hosts one API replica behind a LoadBalancer Service. Prometheus format metrics and structured request logs describe service activity.")
+    doc.add_heading("Setup and local API access", level=2)
+    para(doc, "The final run used Ubuntu 24.04 in WSL 2 with Python 3.12.3 and Docker Desktop's WSL integration. From the repository root, create and activate a Linux virtual environment with `python3 -m venv ~/.venvs/heart-disease-mlops` and `source ~/.venvs/heart-disease-mlops/bin/activate`. Install dependencies using `python -m pip install -r requirements.txt`. Run `python -m heart_mlops.data`, `python -m heart_mlops.eda`, `ruff check .`, `python -m pytest -q`, and `python -m heart_mlops.train` in that order. WSL_RUNBOOK.md gives the full Windows-to-Linux path and commands.")
+    para(doc, "Build the local image with `docker build --build-arg PYTHON_VERSION=3.12 -t heart-disease-api:local .`. With Docker Desktop Kubernetes enabled, apply `k8s/deployment.yaml` and `k8s/service.yaml` from Windows PowerShell. The local LoadBalancer serves `http://localhost:8000/health`, `POST http://localhost:8000/predict` using `sample_request.json`, and `http://localhost:8000/monitor`; `GET /metrics` exposes Prometheus text. The endpoint is available while the laptop's cluster is running.")
 
     page(doc, "2 Data source and preparation")
     para(doc, "The source is the UCI processed Cleveland Heart Disease file, with 303 rows, 13 predictors, and the original 0–4 target. The download script verifies a SHA-256 digest. Numeric parsing converts the source's question mark missing marker to null; cleaning removes incomplete and duplicate records and maps targets 1–4 to class 1.")
@@ -219,19 +231,22 @@ def build(final=False, repo_url=""):
 
     page(doc, "7 Experiment tracking and reproducibility")
     para(doc, "MLflow records a run for each candidate and a final selected model run. Each candidate run contains the best grid parameters, mean cross validation metrics, full search results, and a candidate score plot. The final run contains held out metrics, evaluation figures, metadata, and the fitted model. SQLite stores run metadata locally; CI uploads the generated store as a workflow artifact.")
-    evidence(doc, "04-mlflow.png", "Figure 9  MLflow experiment runs and logged artifacts", 5.7, 3.6)
+    evidence(doc, "04-mlflow.png", "Figure 9  MLflow candidate and selected run metrics", 5.7, 3.6)
     para(doc, "The joblib file contains the full fitted preprocessing and classifier pipeline. Model metadata records the source checksum, selected parameters, features, seed, package version, and actual test metrics. Requirements and the raw download script allow a clean rebuild.")
 
     page(doc, "8 Quality checks and continuous integration")
     para(doc, "Unit tests cover target mapping and missing data, invalid source targets, pipeline fitting and probability output, API input validation, readiness, and monitoring endpoints. GitHub Actions runs Ruff, Pytest, data preparation, EDA, training, and a Docker image build. A failure in any required step fails the workflow; generated model and experiment files are uploaded for inspection.")
-    evidence(doc, "05-tests-ci.png", "Figure 10  Passing GitHub Actions workflow and artifact", 5.5)
-    evidence(doc, "06-docker.png", "Figure 11  Local Docker image build", 5.0)
-    para(doc, "The Docker image runs as a non-root user and includes the selected model. The `/health` endpoint checks that the model can be loaded before the container is considered ready.")
+    evidence(doc, "05-tests-ci.png", "Figure 10  Passing GitHub Actions workflow", 5.5)
+    evidence(doc, "05-tests-ci-artifacts.png", "Figure 11  Uploaded workflow artifact", 5.1, 1.1)
+    evidence(doc, "06-docker.png", "Figure 12  Local Docker image build", 5.0)
+    evidence(doc, "07-docker-prediction.png", "Figure 13  Local container prediction and request logs", 5.4, 1.55)
 
     page(doc, "9 Deployment monitoring and limitations")
     para(doc, "Docker Desktop Kubernetes deploys one API replica with health probes, CPU/memory limits, and a LoadBalancer Service on port 8000. The API provides `/predict`, `/health`, `/metrics`, `/monitor`, and OpenAPI documentation. Request logs contain only method, route, status, and duration; patient feature values are not logged.")
-    evidence(doc, "08-kubernetes.png", "Figure 12  Ready Kubernetes pod and LoadBalancer Service", 5.2)
-    evidence(doc, "10-monitoring.png", "Figure 13  Live request monitoring and structured logs", 5.2)
+    para(doc, "The sample_request.json tests against the local container and Kubernetes service returned class 1, positive-class model probability 0.9837, and confidence 0.9837. This example score is not a validated clinical risk estimate.")
+    evidence(doc, "08-kubernetes.png", "Figure 14  Ready Kubernetes pod and LoadBalancer Service", 5.2)
+    evidence(doc, "09-kubernetes-prediction.png", "Figure 15  Prediction from the deployed Kubernetes API", 5.3, 0.8)
+    evidence(doc, "10-monitoring.png", "Figure 16  Live API monitoring dashboard", 5.2)
     para(doc, "Limitations: the dataset is small and historical, no external validation or fairness assessment was performed, and predicted probabilities are not calibrated clinical risks. The local Kubernetes endpoint is accessible from the laptop, not a public internet URL.")
     para(doc, "Repository: " + (repo_url or "Add the GitHub URL after publishing the project."))
     para(doc, "Source: Janosi et al., Heart Disease, UCI Machine Learning Repository, 1988. https://doi.org/10.24432/C52P4X")
